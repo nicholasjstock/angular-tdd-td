@@ -1,3 +1,96 @@
+# 
+```ng new angular-tdd```
+```cd angular-tdd```
+```ng g c authors```
+```yarn add ngx-jsonapi@2.1.12 --save```
+```npm test```
+```touch authors/authors.service.ts```
+authors.service.ts:
+```
+import { Injectable } from '@angular/core';
+import { Autoregister, Service, Resource, DocumentCollection, DocumentResource } from 'ngx-jsonapi';
+
+export class Author extends Resource {
+    public attributes = {
+        name: 'default name',
+        date_of_birth: ''
+    };
+
+    public relationships = {
+     };
+}
+
+@Injectable()
+export class AuthorsService extends Service<Author> {
+    public resource = Author;
+    public type = 'authors';
+}
+```
+replace component with
+```
+import { Component, OnInit } from '@angular/core';
+import { DocumentCollection } from 'ngx-jsonapi';
+import { AuthorsService, Author } from './authors.service';
+
+@Component({
+  selector: 'app-authors',
+  templateUrl: './authors.component.html',
+  styleUrls: ['./authors.component.sass']
+})
+export class AuthorsComponent implements OnInit {
+  public authors: DocumentCollection<Author>;
+  public constructor(private authorsService: AuthorsService) {
+        authorsService
+            .all({
+                // include: ['books', 'photos'],
+            })
+            .subscribe(authors => (this.authors = authors));
+    }
+
+  ngOnInit() {
+  }
+
+}
+
+```
+
+test fail. "NullInjectorError: StaticInjectorError(DynamicTestModule)[AuthorsComponent -> AuthorsService]: 
+  StaticInjectorError(Platform: core)[AuthorsComponent -> AuthorsService]: 
+    NullInjectorError: No provider for AuthorsService!"
+
+
+add provider to the test bed
+
+test fail. TypeError: Cannot read property 'getResourceService' of undefined
+
+add imports.
+imports:  [NgxJsonapiModule.forRoot({
+        url: '//jsonapiplayground.reyesoft.com/v2/'
+      })]
+
+
+```providers: [AuthorsService]```
+
+
+add in authors component spec 
+
+```
+imports:  [NgxJsonapiModule.forRoot({
+        url: '//jsonapiplayground.reyesoft.com/v2/'
+      })]
+
+```
+test pass!
+add to test
+
+```
+it('show all the authors', () => {
+    const authorElements = fixture.debugElement.queryAll(By.css('.authors'));
+    expect(authorElements.length).toBeGreaterThan(3);
+  });
+```
+
+
 # AngularTdd
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.24.
